@@ -10,9 +10,10 @@ Data importer for Albatros
 @author     KMR
 @licence    GNU GPL v.3
 """
-import os
 import glob
 import yaml
+import time
+import os, sys
 import zipfile
 import urllib2
 from api import models
@@ -60,9 +61,11 @@ zip_ref.close()
 allowed_localities = [x.strip() for x in conf['localities'].split(',')]
 
 db_engine = models.db_connect()
+# Import the data from the .psv files (who uses pipe separators when there's a perfectly good )
 with db_engine.connect() as connection:
     import_statement_dir = os.path.join( conf['sql_dir'].format(DIR), "import_statements" )
     tables = []
+    locality = None
 
     for fn in glob.glob(conf['target_dir'].format(DIR) + '*/*/*/*/*/*.psv'):
         table = os.path.basename(fn).lower()
@@ -70,20 +73,24 @@ with db_engine.connect() as connection:
 
         # Work out the state/territory information for this file
         file_details = table.split('_', 1)
+
+        if locality != file_details[0]:
+            if locality is not None:
+                sys.stdout.write('\r\n')
+            sys.stdout.write("From {} importing ".format(file_details[0]))
+
         locality = file_details[0]
         table    = file_details[1]
 
-        # if this is an authority code file we'll need to append the code part
-        if locality == 'authority':
-            locality = 'authority_code'
+        sys.stdout.write("{}, ".format(table))
+        sys.stdout.flush()
 
         # if it's somewhere we want, or we want all the places,
         # or it's something we need anyway we should create the imports
-        if locality in allowed_localities or 'all' in allowed_localities or locality == 'authority_code':
-            message = "Processed {} - {}".format( locality, table )
-
+        if locality in allowed_localities or 'all' in allowed_localities or locality == 'authority':
             # Open the source file
             with open(fn, 'r') as f:
+                # read through the header to get the columns
                 header = f.readline().strip().lower().split('|')
                 columns = []
                 for col in header:
@@ -93,37 +100,34 @@ with db_engine.connect() as connection:
                     columns.append("{} {}".format(col, type))
                 col_list = ', '.join(columns)
 
-                drop_statement   = "drop table if exists {};".format(table)
-                create_statement = "create table {} ({});".format(table, col_list)
-                write_statement  = "copy {} from '{}' with null '' delimiter '|' csv header;".format(table, fn)
-
-                # If it's not a dry run then import all the data, if it is we'll just generate the .sql files
-                # Open the target file, creating it if needed
-                filename = os.path.join( import_statement_dir, table + ".sql")
+                # work out if we have a new table on our hands, and set the appropriate file mode
                 mode = 'a+'
+                statements = []
 
-                new_table = not table in tables
-                if new_table:
+                if not table in tables:
                     tables.append(table)
                     mode = 'w+'
+                    statements.append("drop table if exists {} cascade;".format(table))
+                    statements.append("create table {} ({});".format(table, col_list))
 
+                statements.append("copy {} from '{}' with null '' delimiter '|' csv header;".format(table, fn))
+
+                # If it's not a dry run then import all the data, if it is we'll just generate the .sql files
+                filename = os.path.join( import_statement_dir, table + ".sql")
                 with open(filename, mode) as sql_file:
-                    if new_table:
-                        sql_file.write(drop_statement + "\n")
-                        sql_file.write(create_statement + "\n")
-                    sql_file.write(write_statement + "\n")
+                    for statement in statements:
+                        sql_file.write(statement + "\n")
 
                 if not conf['dry_run']:
-                    if new_table:
-                        connection.execute(text(drop_statement).execution_options(autocommit=True))
-                        connection.execute(text(create_statement).execution_options(autocommit=True))
-                    connection.execute(text(write_statement).execution_options(autocommit=True))
+                    for statement in statements:
+                        connection.execute(text(statement).execution_options(autocommit=True))
 
+    print "\r\nImport complete."
 
-            #print message
-
-    # build the conglomerate tables
-    if not conf['dry_run']:
-        with open(os.path.join( conf['sql_dir'].format(DIR), "build_address_detail_flat.sql" ), 'r') as sql_file:
-            statement = sql_file.read()
-            connection.execute(text(statement).execution_options(autocommit=True))
+    statement = models.get_addresses_statement()
+    print "Creating new addresses view"
+    # Create the table from the imported data
+    connection.execute(text(statement).execution_options(autocommit=True))
+    print "Done."
+    # close the connection as we're done
+    connection.close()
