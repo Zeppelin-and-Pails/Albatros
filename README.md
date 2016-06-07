@@ -2,24 +2,24 @@
 A Python based API for accessing the Australian GNAF dataset
 
 # G-NAF
-Geocoded National Address File is Australia’s authoritative, geocoded address file.
+Geocoded National Address File is Australia’s authoritative, geocoded address file.   
 this tool will load a subset of the GNAF into a combined "addresses" table for accessing via an API
 
 # Prerequisites
 
-Working PostgreSQL instalation
-A user with the superuser role for the import
-the [pg8000 package](https://pypi.python.org/pypi/pg8000)
+ - Working PostgreSQL instalation   
+ - A user with the superuser role for the import   
+ - the [pg8000 package](https://pypi.python.org/pypi/pg8000)   
 
 # Import data
 
- - Add the appropriate database details to Albatros/api/db.cfg
- - Update data_importer.cfg with the desired settings
- - Run Albatros/data_importer.py
+ - Add the appropriate database details to Albatros/api/db.cfg   
+ - Update data_importer.cfg with the desired settings   
+ - Run Albatros/data_importer.py   
 
 # Address View
 
-This view combines additional address information from address component tables into the `address_detail`.
+This view combines additional address information from address component tables into the `address_detail`.   
 Appendix B in the [G-NAF documentation](https://www.psma.com.au/sites/default/files/g-naf_product_description.pdf) describes the rest of the data model in detail.
 
 ```

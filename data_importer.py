@@ -44,18 +44,36 @@ type_map = {
     'latitude'               : 'double precision',
 }
 
-if not os.path.exists(conf['target_dir'].format(DIR) + conf['source_file']):
-    zip_file = urllib2.urlopen(conf['url'])
+source_file_path = conf['target_dir'].format(DIR) + conf['source_file']
+
+if not os.path.exists(source_file_path):
+    print "Retrieving data source, saving to {}".format(source_file_path)
+    zip_file = urllib2.urlopen(conf['url'], timeout=conf['timeout'])
+    step     = int(zip_file.info().get('Content-length')) / 100
+    download = 0
+
+    sys.stdout.write("{}]".format( " " * 114))
+    sys.stdout.write("\rDownloading: [")
+    sys.stdout.flush()
+    data_chunk = 4096
     with open(conf['source_file'], 'wb+') as output:
         while True:
-            data = zip_file.read(4096)
+            data = zip_file.read(data_chunk)
             if data:
                 output.write(data)
             else:
                 break
 
-with zipfile.ZipFile(conf['target_dir'].format(DIR) + conf['source_file'],"r") as zip_ref:
+            download += data_chunk
+            if download >= step:
+                sys.stdout.write("=")
+                sys.stdout.flush()
+                download = 0
+
+with zipfile.ZipFile(source_file_path, "r") as zip_ref:
+    print "Extracting data from source"
     zip_ref.extractall(conf['target_dir'].format(DIR) + "extracted")
+    print "Extracted."
 zip_ref.close()
 
 allowed_localities = [x.strip() for x in conf['localities'].split(',')]
