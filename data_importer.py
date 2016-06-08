@@ -56,7 +56,7 @@ if not os.path.exists(source_file_path):
     sys.stdout.write("\rDownloading: [")
     sys.stdout.flush()
     data_chunk = 4096
-    with open(conf['source_file'], 'wb+') as output:
+    with open(source_file_path, 'wb+') as output:
         while True:
             data = zip_file.read(data_chunk)
             if data:
