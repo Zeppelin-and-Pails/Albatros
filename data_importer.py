@@ -12,8 +12,7 @@ Data importer for Albatros
 """
 import glob
 import yaml
-import time
-import os, sys
+import re, os, sys
 import zipfile
 import urllib2
 from api import models
@@ -46,10 +45,17 @@ type_map = {
 
 source_file_path = conf['target_dir'].format(DIR) + conf['source_file']
 
+# If we don't have a copy of the data download a new one, if the source_file name gets updated we'll re-download as well.
 if not os.path.exists(source_file_path):
+    if not os.path.exists(conf['target_dir'].format(DIR)):
+        os.makedirs(conf['target_dir'].format(DIR))
+
     print "Retrieving data source, saving to {}".format(source_file_path)
+
+    # Get the content length so we can break it up into chunks for easier downloading
+    p = re.compile("(?:\/)(\d+$)")
     zip_file = urllib2.urlopen(conf['url'], timeout=conf['timeout'])
-    step     = int(zip_file.info().get('Content-length')) / 100
+    step     = int(p.search(zip_file.info().get('Content-Range')).group(1)) / 100
     download = 0
 
     sys.stdout.write("{}]".format( " " * 114))
@@ -70,6 +76,8 @@ if not os.path.exists(source_file_path):
                 sys.stdout.flush()
                 download = 0
 
+    print ""
+
 with zipfile.ZipFile(source_file_path, "r") as zip_ref:
     print "Extracting data from source"
     zip_ref.extractall(conf['target_dir'].format(DIR) + "extracted")
@@ -85,7 +93,7 @@ with db_engine.connect() as connection:
     tables = []
     locality = None
 
-    for fn in glob.glob(conf['target_dir'].format(DIR) + '*/*/*/*/*/*.psv'):
+    for fn in glob.glob(conf['target_dir'].format(DIR) + '*/*/*/*/*/*/*.psv'):
         table = os.path.basename(fn).lower()
         table = table[:table.index('_psv.psv')]
 
@@ -140,12 +148,17 @@ with db_engine.connect() as connection:
                     for statement in statements:
                         connection.execute(text(statement).execution_options(autocommit=True))
 
-    print "\r\nImport complete."
+    if not conf['dry_run']:
+        print "\r\nImport complete."
 
-    statement = models.get_addresses_statement()
-    print "Creating new addresses view"
-    # Create the table from the imported data
-    connection.execute(text(statement).execution_options(autocommit=True))
-    print "Done."
+        statement = models.get_addresses_statement()
+        print "Creating new addresses view"
+        # Create the table from the imported data
+        connection.execute(text(statement).execution_options(autocommit=True))
+    else:
+        print "\r\nStatement construction complete."
+
     # close the connection as we're done
     connection.close()
+
+print "Done."

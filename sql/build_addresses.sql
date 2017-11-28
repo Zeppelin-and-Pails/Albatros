@@ -29,8 +29,8 @@ create or replace view addresses as
     , address_detail.property_pid
     , address_detail.gnaf_property_pid
     , address_detail.primary_secondary
-    , mb_2011.mb_2011_code
-    , address_mesh_block_2011.mb_match_code
+    , mb_2016.mb_2016_code
+    , address_mesh_block_2016.mb_match_code
     , street_locality.street_class_code
     , street_locality.street_name
     , street_locality.street_type_code
@@ -57,8 +57,8 @@ create or replace view addresses as
     , street_locality_point.longitude as street_longitude
     , street_locality_point.latitude as street_latitude
   from address_detail
-    left outer join address_mesh_block_2011 on address_mesh_block_2011.address_detail_pid = address_detail.address_detail_pid
-    left outer join mb_2011 on mb_2011.mb_2011_pid = address_mesh_block_2011.mb_2011_pid
+    left outer join address_mesh_block_2016 on address_mesh_block_2016.address_detail_pid = address_detail.address_detail_pid
+    left outer join mb_2016 on mb_2016.mb_2016_pid = address_mesh_block_2016.mb_2016_pid
     left outer join address_site on address_site.address_site_pid = address_detail.address_site_pid
     left outer join locality on locality.locality_pid = address_detail.locality_pid
     left outer join street_locality on street_locality.street_locality_pid = address_detail.street_locality_pid
@@ -102,8 +102,8 @@ select
   , address_detail.property_pid
   , address_detail.gnaf_property_pid
   , address_detail.primary_secondary
-  , mb_2011.mb_2011_code
-  , address_mesh_block_2011.mb_match_code
+  , mb_2016.mb_2016_code
+  , address_mesh_block_2016.mb_match_code
   , street_locality.street_class_code
   , street_locality.street_name
   , street_locality.street_type_code
@@ -130,8 +130,8 @@ select
   , street_locality_point.longitude as street_longitude
   , street_locality_point.latitude as street_latitude
 from address_detail
-  left outer join address_mesh_block_2011 on address_mesh_block_2011.address_detail_pid = address_detail.address_detail_pid
-  left outer join mb_2011 on mb_2011.mb_2011_pid = address_mesh_block_2011.mb_2011_pid
+  left outer join address_mesh_block_2016 on address_mesh_block_2016.address_detail_pid = address_detail.address_detail_pid
+  left outer join mb_2016 on mb_2016.mb_2016_pid = address_mesh_block_2016.mb_2016_pid
   left outer join address_site on address_site.address_site_pid = address_detail.address_site_pid
   left outer join locality on locality.locality_pid = address_detail.locality_pid
   left outer join street_locality on street_locality.street_locality_pid = address_detail.street_locality_pid
@@ -156,6 +156,6 @@ drop table if exists address_default_geocode;
 drop table if exists address_site_geocode;
 drop table if exists street_locality_point;
 drop table if exists primary_secondary;
-drop table if exists address_mesh_block_2011;
-drop table if exists mb_2011;
+drop table if exists address_mesh_block_2016;
+drop table if exists mb_2016;
 */
