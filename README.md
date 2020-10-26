@@ -5,6 +5,8 @@ A Python based API for accessing the Australian GNAF dataset
 Geocoded National Address File is Australia’s authoritative, geocoded address file.   
 this tool will load a subset of the GNAF into a combined "addresses" table for accessing via an API
 
+_Developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the [Open Geo-coded National Address File (G-NAF) End User Licence Agreement.](https://data.gov.au/dataset/geocoded-national-address-file-g-naf/resource/09f74802-08b1-4214-a6ea-3591b2753d30)_
+
 # Prerequisites
 
  - Working PostgreSQL instalation   
@@ -20,7 +22,7 @@ this tool will load a subset of the GNAF into a combined "addresses" table for a
 # Addresses View
 
 This view combines additional address information from address component tables into the `address_detail`.   
-Appendix B in the [G-NAF documentation](https://www.psma.com.au/sites/default/files/g-naf_product_description.pdf) describes the rest of the data model in detail.
+The [G-NAF documentation](https://geoscape.com.au/data/g-naf/) describes the rest of the data model in detail.
 
 ```
                    View "addresses"
