@@ -20,11 +20,9 @@ conf = yaml.safe_load(open("{}/db.cfg".format(DIR)))
 
 def get_table(table):
     """
-    Get the named table from the database, automaticall loading it into a model
-    :param table:
-    the name of the requested table, case sensetive if the database is
-    :return:
-    an sqlalchemy.Table object
+    Get the named table from the database, automatically loading it into a model
+    :param table:   the name of the requested table, case sensetive if the database is
+    :return:    an sqlalchemy.Table object
     """
     engine = db_connect()
     meta = MetaData(bind=engine)
@@ -34,8 +32,7 @@ def db_connect():
     """
     Performs database connection using database settings from settings.py.
     Returns sqlalchemy engine instance
-    :return:
-    an sqlalchemy.engine object
+    :return:    an sqlalchemy.engine object
     """
     database = {
         'drivername': 'postgresql+pg8000',
@@ -61,7 +58,7 @@ def get_addresses_statement():
 
     Session = sessionmaker(bind=db_connect())
     session = Session()
-    result =     session.query(
+    result  = session.query(
         ad.c.address_detail_pid
         , ad.c.building_name
         , ad.c.lot_number_prefix
