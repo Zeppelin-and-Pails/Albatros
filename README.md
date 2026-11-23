@@ -11,7 +11,8 @@ _Developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Aus
 
  - Working PostgreSQL instalation   
  - A user with the superuser role for the import   
- - A few python packages (see require)
+ - Python 3.12+
+ - A few python packages, listed in `requirements.txt` (`pip install -r requirements.txt`)
 
 # Import data
 

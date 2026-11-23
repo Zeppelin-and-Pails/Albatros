@@ -25,8 +25,8 @@ def get_table(table):
     :return:    an sqlalchemy.Table object
     """
     engine = db_connect()
-    meta = MetaData(bind=engine)
-    return Table(table, meta, autoload=True, autoload_with=engine)
+    meta = MetaData()
+    return Table(table, meta, autoload_with=engine)
 
 def db_connect():
     """
@@ -42,7 +42,7 @@ def db_connect():
         'password':   conf['pass'],
         'database':   conf['database'],
     }
-    return create_engine(URL(**database), poolclass=NullPool)
+    return create_engine(URL.create(**database), poolclass=NullPool)
 
 def get_addresses_statement():
     ad   = get_table('address_detail')

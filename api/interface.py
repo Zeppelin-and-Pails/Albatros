@@ -9,7 +9,7 @@ Interface for Albatros to access and search the database
 @author     KMR
 @licence    GNU GPL v.3
 """
-import models
+from . import models
 
 class interface:
     """

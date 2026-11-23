@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Albatros API
@@ -14,7 +14,7 @@ import glob
 import yaml
 import re, os, sys
 import zipfile
-import urllib2
+import urllib.request
 from api import models
 from sqlalchemy import text
 
@@ -50,12 +50,12 @@ if not os.path.exists(source_file_path):
     if not os.path.exists(conf['target_dir'].format(DIR)):
         os.makedirs(conf['target_dir'].format(DIR))
 
-    print "Retrieving data source, saving to {}".format(source_file_path)
+    print("Retrieving data source, saving to {}".format(source_file_path))
 
     # Get the content length so we can break it up into chunks for easier downloading
-    p = re.compile("(?:\/)(\d+$)")
-    zip_file = urllib2.urlopen(conf['url'], timeout=conf['timeout'])
-    step     = int(p.search(zip_file.info().get('Content-Range')).group(1)) / 100
+    p = re.compile(r"(?:\/)(\d+$)")
+    zip_file = urllib.request.urlopen(conf['url'], timeout=conf['timeout'])
+    step     = int(p.search(zip_file.info().get('Content-Range')).group(1)) // 100
     download = 0
 
     sys.stdout.write("{}]".format( " " * 114))
@@ -76,19 +76,19 @@ if not os.path.exists(source_file_path):
                 sys.stdout.flush()
                 download = 0
 
-    print ""
+    print("")
 
 with zipfile.ZipFile(source_file_path, "r") as zip_ref:
-    print "Extracting data from source"
+    print("Extracting data from source")
     zip_ref.extractall(conf['target_dir'].format(DIR) + "extracted")
-    print "Extracted."
+    print("Extracted.")
 zip_ref.close()
 
 allowed_localities = [x.strip() for x in conf['localities'].split(',')]
 
 db_engine = models.db_connect()
 # Import the data from the .psv files (who uses pipe separators when there's a perfectly good )
-with db_engine.connect() as connection:
+with db_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
     import_statement_dir = os.path.join( conf['sql_dir'].format(DIR), "import_statements" )
     tables = []
     locality = None
@@ -121,7 +121,7 @@ with db_engine.connect() as connection:
                 columns = []
                 for col in header:
                     type = type_map['default']
-                    if type_map.has_key(col):
+                    if col in type_map:
                         type = type_map[col]
                     columns.append("{} {}".format(col, type))
                 col_list = ', '.join(columns)
@@ -146,19 +146,19 @@ with db_engine.connect() as connection:
 
                 if not conf['dry_run']:
                     for statement in statements:
-                        connection.execute(text(statement).execution_options(autocommit=True))
+                        connection.execute(text(statement))
 
     if not conf['dry_run']:
-        print "\r\nImport complete."
+        print("\r\nImport complete.")
 
         statement = models.get_addresses_statement()
-        print "Creating new addresses view"
+        print("Creating new addresses view")
         # Create the table from the imported data
-        connection.execute(text(statement).execution_options(autocommit=True))
+        connection.execute(text(statement))
     else:
-        print "\r\nStatement construction complete."
+        print("\r\nStatement construction complete.")
 
     # close the connection as we're done
     connection.close()
 
-print "Done."
+print("Done.")
